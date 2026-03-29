@@ -137,7 +137,8 @@ func (s *ActivityService) StopActivity(ctx context.Context, req *connect.Request
 
 func (s *ActivityService) GetDailyLogs(ctx context.Context, req *connect.Request[activityv1.GetDailyLogsRequest]) (*connect.Response[activityv1.GetDailyLogsResponse], error) {
 	dateStr := req.Msg.Date
-	startDate, err := time.Parse("2006-01-02", dateStr)
+	jst, _ := time.LoadLocation("Asia/Tokyo")
+	startDate, err := time.ParseInLocation("2006-01-02", dateStr, jst)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
