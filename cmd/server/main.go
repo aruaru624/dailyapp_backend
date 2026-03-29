@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,11 +14,57 @@ import (
 	"dailyApp/backend/internal/service"
 )
 
-func main() {
-	dsn := os.Getenv("DB_DSN")
-	if dsn == "" {
-		dsn = "root:root@tcp(127.0.0.1:3306)/dailyapp?charset=utf8mb4&parseTime=True&loc=Local"
+func getDSN() string {
+	if dsn := os.Getenv("DB_DSN"); dsn != "" {
+		return dsn
 	}
+	
+	// Default fallbacks
+	user := os.Getenv("NS_MARIADB_USER")
+	if user == "" {
+		user = os.Getenv("DB_USER")
+	}
+	if user == "" {
+		user = "root"
+	}
+
+	pass := os.Getenv("NS_MARIADB_PASSWORD")
+	if pass == "" {
+		pass = os.Getenv("DB_PASS")
+	}
+	if pass == "" {
+		pass = "root"
+	}
+
+	host := os.Getenv("NS_MARIADB_HOSTNAME")
+	if host == "" {
+		host = os.Getenv("DB_HOST")
+	}
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
+	port := os.Getenv("NS_MARIADB_PORT")
+	if port == "" {
+		port = os.Getenv("DB_PORT")
+	}
+	if port == "" {
+		port = "3306"
+	}
+
+	dbName := os.Getenv("NS_MARIADB_DATABASE")
+	if dbName == "" {
+		dbName = os.Getenv("DB_NAME")
+	}
+	if dbName == "" {
+		dbName = "dailyapp"
+	}
+
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbName)
+}
+
+func main() {
+	dsn := getDSN()
 
 	database, err := db.InitDB(dsn)
 	if err != nil {
@@ -50,7 +97,11 @@ func main() {
 		})
 	}
 
-	addr := ":8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
 	log.Printf("Starting backend server on %s", addr)
 	err = http.ListenAndServe(
 		addr,
