@@ -79,7 +79,7 @@ func main() {
 	planSvc := service.NewPlanService(database)
 	
 	path, handler := activityv1connect.NewActivityServiceHandler(activitySvc)
-	mux.Handle(path, handler)
+	mux.Handle("/api"+path, http.StripPrefix("/api", handler))
 	mux.Handle("/api/v1/plans", planSvc)
 
 	// Wrap with CORS middleware
